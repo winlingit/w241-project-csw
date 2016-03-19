@@ -2,6 +2,8 @@
 # Carlos, Winston & Sean
 
 library(data.table)
+library(parallel)
+library(pwr)
 
 # Data Analysis Code
 
@@ -84,7 +86,7 @@ estimate_ate <- function(data, treatment = NULL) {
  
 # Estimates P-value using randomization inference under sharp null
 # Assumes y column is populated as per function above
-estimate_p <- function(data, repetitions = 10000) {
+estimate_p <- function(data, repetitions = 1000) {
   do_test_iteration <- function(data) {
     treat_hyp <- sample(data$treat, nrow(data))
     estimate_ate(data, treat_hyp)
@@ -94,20 +96,6 @@ estimate_p <- function(data, repetitions = 10000) {
 
   is_greater <- abs(ates) >= abs(est_ate)
   mean(is_greater)
-}
-
-# Estimates statistical power for a given effect size
-estimate_power <- function(data, 
-                           outcome_base = .25,
-                           effect_size = .05, 
-                           pct_treat = .5, 
-                           p = .05, 
-                           repetitions = 10000, 
-                           p_repetitions = 10000) {
-  assign_potential_outcomes(data, outcome_base, effect_size)
-  assign_treatment(data, pct_treat)
-  p_values <- replicate(repetitions, estimate_p(data, p_repetitions))
-  mean(p_values <= p)
 }
 
 #################################
@@ -121,12 +109,14 @@ assign_treatment(data, pct_treat)
 estimate_ate(data)
 estimate_p(data)
 
-
 #################################
 ## Statistical Power Estimates ##
 #################################
 
+
+
 data <- build_cov_data(pct_male, age_min, age_max, titles)
 
 ates <- seq(-.25, .25, by=.01)
-powers <- lapply(ates, function(ate) estimate_power(data, outcome_base = .25, effect_size=ate, repetitions = 100, p_repetitions=100))
+powers <- sapply(ates, function(ate) pwr.2p.test(ate, n / 2)$power)
+plot(ates, powers)
