@@ -113,10 +113,8 @@ estimate_p(data)
 ## Statistical Power Estimates ##
 #################################
 
-
-
 data <- build_cov_data(pct_male, age_min, age_max, titles)
 
 ates <- seq(-.25, .25, by=.01)
-powers <- sapply(ates, function(ate) pwr.2p.test(ate, n / 2)$power)
+powers <- sapply(ates, function(ate) pwr.2p.test(ate, 800 / 2)$power)
 plot(ates, powers)
