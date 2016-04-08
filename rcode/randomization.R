@@ -47,7 +47,8 @@ merged <- merge(dt, collectors, by.x='CollectorId', by.y='Id')
 stats <- unique(merged[, .(.N, Org, Region, Female, treat.pct=mean(treat) ), by=blocknum])
 stats
 
-write.csv(merged, file="Randomized-with-collectors.csv", quote=FALSE, row.names=FALSE)
+write.csv(merged[treat==1], file="Randomized-with-collectors_TREATMENT.csv", quote=FALSE, row.names=FALSE)
+write.csv(merged[treat==0], file="Randomized-with-collectors_CONTROL.csv", quote=FALSE, row.names=FALSE)
 
 # Anonymizing by blanking out name and email
 merged[, ':=' (
