@@ -1,0 +1,53 @@
+---
+title: 'Final Project Report: A Study of the Effects of Personalization on Survey Response Rates'
+author: 'Carlos Eduardo Rodriguez, Sean Underwood, Winston Lin'
+date: \today
+output: pdf_document
+---
+
+# 1. Introduction
+
+
+
+# 2. Experimental Design
+
+## 2.1. Treatment
+
+
+```{r}
+
+```
+
+## 2.2. Sampling
+
+
+```{r}
+
+```
+
+## 2.3. Randomization
+
+
+```{r}
+
+```
+
+# 4. Results & Discussion
+
+
+```{r}
+
+```
+
+# 5. Related Work & Future Research
+
+
+
+# 6. Conclusion
+
+
+
+# 7. Acknowledgements
+
+
+
