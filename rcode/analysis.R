@@ -36,7 +36,6 @@ ci
 # 4. display results
 stargazer(m1, m2, m3, type='text')
 
-coef.test(m3)
 
 # stimated ATE = 0.073 (SE = 0.026) is significant (p < 0.01)
 # Org and sex covariates were not predictive of response rate
