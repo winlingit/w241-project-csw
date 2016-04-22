@@ -51,7 +51,7 @@ m3 = lm(responded ~ treat + Org + Female, data = dtx)  # treatment + org + sex
 summary(m3)
 
 coeff = summary(m3)$coefficients
-ci = coeff[2,1] + c(-2,2)*coeff[2,2]  # 95% CI
+ci = coeff[2,1] + c(-1.96, 1.96)*coeff[2,2]  # 95% CI
 ci
 
 # 4. display results
