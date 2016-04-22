@@ -3,10 +3,31 @@
 library(data.table)
 library(RCurl)
 library(stargazer)
+library(ri)
+
+# Analysis of pilot
+n.treat = 134
+n.control = 133
+n.treat.responded = 5
+n.control.responded = 4
+
+pilot.responded = c(rep(1, n.treat.responded),                # treat responses
+                    rep(0, n.treat - n.treat.responded),      # treat non-responses
+                    rep(1, n.control.responded),              # control responses
+                    rep(0, n.control - n.control.responded))  # control non-responses
+pilot.treat = c(rep(1, n.treat), rep(0, n.control))
+
+pilot.perms <- genperms(pilot.treat) # all possible permutations
+pilot.probs <- genprobexact(pilot.treat) # probability of treatment
+pilot.ate <- estate(pilot.responded, pilot.treat, prob=pilot.probs) # estimate the ATE
+pilot.ate
+
+pilot.Ys <- genouts(pilot.responded, pilot.treat,ate=0) # generate potential outcomes under sharp null of no effect
+pilot.distout <- gendist(pilot.Ys,pilot.perms, prob=pilot.probs) # generate sampling dist. under sharp null
+dispdist(pilot.distout, pilot.ate)  # display characteristics of sampling dist. for inference
 
 # Analysis of ATG feedback survey results
 
-# 1. read data
 csv = getURL('https://raw.githubusercontent.com/winlingit/w241-project-csw/master/rcode/atg_results.csv')
 dt = data.table(read.csv(textConnection(csv)))
 
@@ -40,3 +61,34 @@ stargazer(m1, m2, m3, type='text')
 # stimated ATE = 0.073 (SE = 0.026) is significant (p < 0.01)
 # Org and sex covariates were not predictive of response rate
 # no significant interaction effects
+
+
+
+###### ALTERNATIVE ANALYSIS USING RANDOMIZATION INFERENCE #######
+## NOTE: This code is largely copy/pasted and hacked from the example code
+# for the dt package
+y = dtx$responded
+Z = dtx$treat
+block = dtx$blocknum
+
+# Estimate ATE without blocking
+ate.noblock = estate(y, Z); ate.est
+
+# Estimate ATE with blocking
+perms <- genperms(Z,blockvar=block) # all possible permutations
+probs <- genprobexact(Z,blockvar=block) # probability of treatment
+ate <- estate(y,Z,prob=probs) # estimate the ATE
+ate
+
+
+## Conduct Sharp Null Hypothesis Test of Zero Effect for Each Unit
+
+Ys <- genouts(y,Z,ate=0) # generate potential outcomes under sharp null of no effect
+distout <- gendist(Ys,perms, prob=probs) # generate sampling dist. under sharp null
+dispdist(distout, ate)  # display characteristics of sampling dist. for inference
+
+## Generate Sampling Distribution Around Estimated ATE
+
+Ys <- genouts(y,Z,ate=ate) ## generate potential outcomes under tau = ATE
+distout <- gendist(Ys,perms, prob=probs) # generate sampling dist. under tau = ATE
+dispdist(distout, ate)  ## display characteristics of sampling dist. for inference
