@@ -8,7 +8,7 @@ library(ri)
 # Analysis of pilot
 n.treat = 134
 n.control = 133
-n.treat.responded = 5
+n.treat.responded = 6
 n.control.responded = 4
 
 pilot.responded = c(rep(1, n.treat.responded),                # treat responses
