@@ -7,39 +7,83 @@ output: pdf_document
 
 # 1. Introduction
 
+## Overview of Company and Business Processes
+
+
+
+## Problem Statement/Central Question
+
+
+
+## Previous Research on Subject
+
 
 
 # 2. Experimental Design
 
-## 2.1. Treatment
+## 2.1. Definition of Treatment
+
+### Outcome of Interest
 
 
-```{r}
 
-```
-
-## 2.2. Sampling
+### Estimator for Treatment Effect
 
 
-```{r}
 
-```
-
-## 2.3. Randomization
+### Null and Alternative Hypotheses
 
 
-```{r}
 
-```
+## 2.2. Sample Design
+
+### Sampling Method
+
+
+
+### Block Design
+
+
+
+### Summary Statistics
+
+
+
+## 2.3. Assignment of Treatment
+
+### Randomization Method
+
+
+
+### Covariate Balance 
+
+
+
+## 2.4. Experimental Procedure
+
+### Instrumentation
+
+
+
+### Data Collection
+
+
 
 # 4. Results & Discussion
 
+## 4.1. Experiment 1: ATG All-Hands Meeting
 
-```{r}
 
-```
 
-# 5. Related Work & Future Research
+## 4.2. Experiment 2: PTG All-Hands Meeting
+
+
+
+## 4.3. Meta-Analysis of Both Experiments
+
+
+
+## 4.4. Applications and Future Research
 
 
 
@@ -51,3 +95,32 @@ output: pdf_document
 
 
 
+# Appendices
+
+## A. Examples of Emails for Treatment and Control Groups
+
+
+## C. R Code for Experiment
+
+### Sample Data
+
+
+
+### Anonymization
+
+```{r}
+
+```
+
+### Block Randomization
+
+```{r}
+
+```
+
+
+### Analysis
+
+```{r}
+
+```

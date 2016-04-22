@@ -51,13 +51,12 @@ m3 = lm(responded ~ treat + Org + Female, data = dtx)  # treatment + org + sex
 summary(m3)
 
 coeff = summary(m3)$coefficients
-ci = coeff[2,1] + c(-2,2)*coeff[2,2]  # 95% CI
+ci = coeff[2,1] + c(-1.96, 1.96)*coeff[2,2]  # 95% CI
 ci
 
 # 4. display results
 stargazer(m1, m2, m3, type='text')
 
-coef.test(m3)
 
 # stimated ATE = 0.073 (SE = 0.026) is significant (p < 0.01)
 # Org and sex covariates were not predictive of response rate
