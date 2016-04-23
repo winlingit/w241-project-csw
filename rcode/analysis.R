@@ -73,6 +73,15 @@ block = dtx$blocknum
 
 # Estimate ATE without blocking
 ate.noblock = estate(y, Z); ate.est
+perms.noblock <- genperms(Z) # all possible permutations
+probs.noblock <- genprobexact(Z) # probability of treatment
+ate.noblock <- estate(y,Z,prob=probs.noblock) # estimate the ATE
+ate.noblock
+
+Ys <- genouts(y,Z,ate=0) # generate potential outcomes under sharp null of no effect
+distout.noblock <- gendist(Ys,perms.noblock, prob=probs.noblock) # generate sampling dist. under sharp null
+dispdist(distout.noblock, ate.noblock)  # display characteristics of sampling dist. for inference
+
 
 # Estimate ATE with blocking
 perms <- genperms(Z,blockvar=block) # all possible permutations

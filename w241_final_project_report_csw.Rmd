@@ -68,8 +68,28 @@ output: pdf_document
 ### Data Collection
 
 
+# 3. Pilot Study
+
+We also performed a pilot study with help from the datascience@berkeley staff. They were conducting an email survey of the MIDS student body to study engagement with the _Applications in Data Science_ webinar series, and graciously agreed to help us test some of our procedures on this survey.
+
+## 3.1 Pilot Design
+
+The treatment in the pilot survey was roughly the same as in the primary survey, with control paricipants receiving an email with a generic salutation and treatment participants receiving a personalized salutation that included their first name. In order to remain consistent with existing precedent, the exact wording of the email saluatation was slightly different: "Hello Everyone" for control, and "Hello [studen's first name]" for treatment.
+
+One signifcant departure from the primary experiment's design was that we did not use block random assignment for the pilot study. Sex was not included because we did not have easy access to that information, and department was not included because that variable does not apply in this case. This did unfortunately limit our ability to use the pilot as a full dress rehearsal, since it involved significantly less logistic complexity.
 
 # 4. Results & Discussion
+
+--------------------------------
+Group         N  Responses  Rate
+----------- --- ---------- ----- 
+Treatment:  134          6  4.5%
+
+Control:    133          4  3.0%
+
+Total:      267         10  3.7%
+--------------------------------
+
 
 ## 4.1. Experiment 1: ATG All-Hands Meeting
 
