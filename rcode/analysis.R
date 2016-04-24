@@ -1,11 +1,13 @@
-# setwd("~/Documents/Berkeley/241/Final\ Project/w241-project-csw/rcode/")
+
 
 library(data.table)
 library(RCurl)
 library(stargazer)
 library(ri)
 
-# Analysis of pilot
+
+###### ANALYSIS OF PILOT STUDY ######
+
 n.treat = 134
 n.control = 133
 n.treat.responded = 6
@@ -26,21 +28,26 @@ pilot.Ys <- genouts(pilot.responded, pilot.treat,ate=0) # generate potential out
 pilot.distout <- gendist(pilot.Ys,pilot.perms, prob=pilot.probs) # generate sampling dist. under sharp null
 dispdist(pilot.distout, pilot.ate)  # display characteristics of sampling dist. for inference
 
-# Analysis of ATG feedback survey results
 
+###### ANALYSIS OF ATG FEEDBACK SURVEY ######
+
+# read data
 csv = getURL('https://raw.githubusercontent.com/winlingit/w241-project-csw/master/rcode/atg_results.csv')
 dt = data.table(read.csv(textConnection(csv)))
 
-dt[ , .(y = sum(Responses)/sum(N)), by = treat][ , y[1]-y[2]]
+ATE = dt[ , .(y = sum(Responses)/sum(N)), by = treat][ , y[1]-y[2]] # estimate ATE from frequency table
+ATE # estimated ATE = 0.073
 
-# estimated ATE = 0.073
 
-# 2. recover observations
+# recover observations
 dtx = dt[rep(seq(.N), N), !'N', with = F]  # expand table to 352 rows
 dtx[ , responded := c(rep(1, max(Responses)), rep(0, .N - max(Responses))), by = CollectorId]  # add var for responded
 dt$Responses == dtx[ , sum(responded), by = CollectorId]$V1  # checksums for total responses for each collector
 
-# 3. regression analysis
+
+### REGRESSION ANALYSIS
+
+# nest models
 m1 = lm(responded ~ treat, data = dtx)  # treatment only
 summary(m1)
 
@@ -54,17 +61,18 @@ coeff = summary(m3)$coefficients
 ci = coeff[2,1] + c(-1.96, 1.96)*coeff[2,2]  # 95% CI
 ci
 
-# 4. display results
+# display results
 stargazer(m1, m2, m3, type='text')
 
-
-# stimated ATE = 0.073 (SE = 0.026) is significant (p < 0.01)
+# estimated ATE = 0.073 (SE = 0.026) is significant (p < 0.01)
 # Org and sex covariates were not predictive of response rate
 # no significant interaction effects
 
 
-
 ###### ALTERNATIVE ANALYSIS USING RANDOMIZATION INFERENCE #######
+
+### 1. Analysis with "ri" package
+
 ## NOTE: This code is largely copy/pasted and hacked from the example code
 # for the dt package
 y = dtx$responded
@@ -101,3 +109,27 @@ dispdist(distout, ate)  # display characteristics of sampling dist. for inferenc
 Ys <- genouts(y,Z,ate=ate) ## generate potential outcomes under tau = ATE
 distout <- gendist(Ys,perms, prob=probs) # generate sampling dist. under tau = ATE
 dispdist(distout, ate)  ## display characteristics of sampling dist. for inference
+
+
+### 2. Analysis with manual RI
+
+# from randomization.R
+assign.treatment <- function(n) {
+        n.treat = round(n / 2)  # Uses banker's rounding
+        n.control = n - n.treat
+        data = sample(c(rep(1, n.treat), rep(0, n.control)))
+        data
+}
+
+# generate sampling distribution for ATE
+sim.ate = function(dt) {
+        dt[ , treat.ri := assign.treatment(.N), by = block] # randomize assignments in each block
+        ATE = dt[ , .(y = sum(responded)/.N), by = treat.ri][ , y[1]-y[2]] # estimate ATE for each assignment
+        ATE
+}
+
+ate.dist = replicate(10000, sim.ate(dtx)) # generate sampling distribution for ATE
+plot(density(ate.dist), main = "Distribution of ATE", col = "red", xlab = NA)
+
+p.value = 2*mean(ate.dist >= ATE) # return 2-tailed p-value for estimated ATE
+p.value # p-value < 0.01
