@@ -71,7 +71,7 @@ ggplot(dt.atg, aes(x=Block, y=Responses, fill=Block)) +
   geom_bar(stat='identity') +
   geom_text(aes(x=Block, y=Responses, label=Responses), vjust=-.1) +
   facet_wrap( ~ Treat) +
-  ggtitle("ATG Results") + 
+  ggtitle("ATG Responses by Block") + 
   xlab("") + 
   ylab("Responses") + 
   theme( axis.line=element_blank(), 
@@ -86,7 +86,7 @@ ggplot(dt.atg, aes(x=Block, y=Responses, fill=Block)) +
 ggplot(dt.atg, aes(x=Block, y=Rate, fill=Block)) + 
   geom_bar(stat='identity') +
   facet_wrap( ~ Treat) +
-  ggtitle("ATG Results") + 
+  ggtitle("ATG Response Rates by Block") + 
   xlab("") + 
   ylab("Response Rate") + 
   theme( axis.line=element_blank(), 
@@ -120,6 +120,10 @@ ate.noblock
 Ys <- genouts(y, Z ,ate=0) # generate potential outcomes under sharp null of no effect
 distout.noblock <- gendist(Ys, perms.noblock, prob=probs.noblock) # generate sampling dist. under sharp null
 dispdist(distout.noblock, ate.noblock)  # display characteristics of sampling dist. for inference
+
+Ys <- genouts(y,Z,ate=ate.noblock) ## generate potential outcomes under tau = ATE
+distout.noblock <- gendist(Ys,perms.noblock, prob=probs.noblock) # generate sampling dist. under tau = ATE
+dispdist(distout.noblock, ate.noblock)  ## display characteristics of sampling dist. for inference
 
 
 # Estimate ATE with blocking
