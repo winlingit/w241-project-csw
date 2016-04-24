@@ -3,7 +3,11 @@ title: 'Final Project Report: A Study of the Effects of Personalization on Surve
 author: 'Carlos Eduardo Rodriguez, Sean Underwood, Winston Lin'
 date: \today
 output: pdf_document
+header-includes:
+    - \usepackage{caption}
 ---
+
+\captionsetup[table]{labelformat=empty}
 
 ```{r}
 library(RCurl)
@@ -102,19 +106,19 @@ Total:      267         10  3.7%
 ```{r}
 #csv = getURL('https://raw.githubusercontent.com/winlingit/w241-project-csw/master/rcode/atg_results.csv')
 #dt = data.table(read.csv(textConnection(csv)))
-dt=fread('~/Documents/Berkeley/241/Final\ Project/w241-project-csw/rcode/atg_results.csv')
-dt[Female == 0, Sex := 'M']
-dt[Female == 1, Sex := 'F']
-dt[, Y := Responses / N]
+dt.atg=fread('~/Documents/Berkeley/241/Final\ Project/w241-project-csw/rcode/atg_results.csv')
+dt.atg[Female == 0, Sex := 'M']
+dt.atg[Female == 1, Sex := 'F']
+dt.atg[, Y := Responses / N]
+```
+
+```{r, results='asis'}
+atg.stats = dt.atg[order(Org, Region, Sex, treat), .(Org, Region, Sex, Treat=treat, N)]
+kable(atg.stats, digits=2, caption = "ATG Survey Blocks", format = 'pandoc')
 ```
 
 ```{r}
-atg.stats = dt[order(Org, Region, Sex, treat), .(Org, Region, Sex, Treat=treat, N)]
-kable(atg.stats, digits=2)
-```
-
-```{r}
-atg.results = dcast(dt, 
+atg.results = dcast(dt.atg, 
                     blocknum + Org + Region + Sex ~ treat, 
                     value.var= c('N', 'Responses', 'Y'))
 
@@ -123,22 +127,23 @@ atg.results = atg.results[,
                             'N' = N_0 + N_1, '# Treat' = N_0, '# Control' = N_1, 
                             'Y(0)' = Y_0, 'Y(1)' = Y_1, ATE = Y_1 - Y_0)]
 
-kable(atg.results, digits=2)
+kable(atg.results, digits=2, caption = "ATG Survey Results", format="pandoc")
 ```
 
+\pagebreak
 
 ## 4.2. Experiment 2: PTG All-Hands Meeting
 
 
 ```{r}
-dt=fread('~/Documents/Berkeley/241/Final\ Project/w241-project-csw/rcode/ptg_assignment.csv')
-dt[Female == 0, Sex := 'M']
-dt[Female == 1, Sex := 'F']
-dt = dt[order(Org, Region, Sex, Treat), .(Org, Region, Sex, Treat, N)]
+dt.ptg=fread('~/Documents/Berkeley/241/Final\ Project/w241-project-csw/rcode/ptg_assignment.csv')
+dt.ptg[Female == 0, Sex := 'M']
+dt.ptg[Female == 1, Sex := 'F']
+dt.ptg = dt.ptg[order(Org, Region, Sex, Treat), .(Org, Region, Sex, Treat, N)]
 ```
 
 ```{r}
-kable(dt, digits=2)
+kable(dt.ptg, digits=2, caption="PTG Survey Blocks", format="pandoc")
 ```
 
 
