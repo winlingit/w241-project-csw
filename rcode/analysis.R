@@ -129,7 +129,8 @@ sim.ate = function(dt) {
 }
 
 ate.dist = replicate(10000, sim.ate(dtx)) # generate sampling distribution for ATE
-plot(density(ate.dist), main = "Distribution of ATE", col = "red", xlab = NA)
+plot(density(ate.dist), main = "Distribution of ATE", col = "black", xlab = NA)
+abline(v = ATE, col = 'red')
 
 p.value = 2*mean(ate.dist >= ATE) # return 2-tailed p-value for estimated ATE
 p.value # p-value < 0.01
