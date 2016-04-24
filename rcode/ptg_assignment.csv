@@ -1,0 +1,17 @@
+blocknum,Org,Region,Female,Treat,N
+1,Engineering,EMEA,0,0,1
+1,Engineering,EMEA,0,1,2
+2,Services,APAC,0,0,4
+2,Services,APAC,0,1,4
+3,Engineering,AMS,0,0,64
+3,Engineering,AMS,0,1,65
+4,Services,AMS,0,0,40
+4,Services,AMS,0,1,39
+5,Services,EMEA,0,0,24
+5,Services,EMEA,0,1,25
+6,Engineering,AMS,1,0,14
+6,Engineering,AMS,1,1,14
+7,Services,AMS,1,0,31
+7,Services,AMS,1,1,31
+8,Services,EMEA,1,0,11
+8,Services,EMEA,1,1,10
