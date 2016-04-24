@@ -5,6 +5,12 @@ date: \today
 output: pdf_document
 ---
 
+```{r}
+library(RCurl)
+library(data.table)
+library(knitr)
+```
+
 # 1. Introduction
 
 ## Overview of Company and Business Processes
@@ -93,10 +99,47 @@ Total:      267         10  3.7%
 
 ## 4.1. Experiment 1: ATG All-Hands Meeting
 
+```{r}
+#csv = getURL('https://raw.githubusercontent.com/winlingit/w241-project-csw/master/rcode/atg_results.csv')
+#dt = data.table(read.csv(textConnection(csv)))
+dt=fread('~/Documents/Berkeley/241/Final\ Project/w241-project-csw/rcode/atg_results.csv')
+dt[Female == 0, Sex := 'M']
+dt[Female == 1, Sex := 'F']
+dt[, Y := Responses / N]
+```
+
+```{r}
+atg.stats = dt[order(Org, Region, Sex, treat), .(Org, Region, Sex, Treat=treat, N)]
+kable(atg.stats, digits=2)
+```
+
+```{r}
+atg.results = dcast(dt, 
+                    blocknum + Org + Region + Sex ~ treat, 
+                    value.var= c('N', 'Responses', 'Y'))
+
+atg.results = atg.results[, 
+                          .(Org, Region, Sex, 
+                            'N' = N_0 + N_1, '# Treat' = N_0, '# Control' = N_1, 
+                            'Y(0)' = Y_0, 'Y(1)' = Y_1, ATE = Y_1 - Y_0)]
+
+kable(atg.results, digits=2)
+```
 
 
 ## 4.2. Experiment 2: PTG All-Hands Meeting
 
+
+```{r}
+dt=fread('~/Documents/Berkeley/241/Final\ Project/w241-project-csw/rcode/ptg_assignment.csv')
+dt[Female == 0, Sex := 'M']
+dt[Female == 1, Sex := 'F']
+dt = dt[order(Org, Region, Sex, Treat), .(Org, Region, Sex, Treat, N)]
+```
+
+```{r}
+kable(dt, digits=2)
+```
 
 
 ## 4.3. Meta-Analysis of Both Experiments
