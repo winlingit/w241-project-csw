@@ -183,7 +183,7 @@ p.value # p-value < 0.01
 # regression models
 m1 = lm(responded ~ treat, data = dtx) # treatment only
 m2 = lm(responded ~ treat + Female, data = dtx) # treatment + female
-m3 = lm(responded ~ treat + Female + Region, data = dtx) treatment + female + region
-# m4 = lm(responded ~ treat + Female*Region, data = dtx)
+m3 = lm(responded ~ treat + Female + Org, data = dtx) # treatment + female + org
+m4 = lm(responded ~ treat + Female + Org + Region, data = dtx) # treatment + female + org + region
 
-stargazer(m1, m2, m3, type = 'text', title = 'Regression Analysis for ATG Feedback Survey Experiment')
+stargazer(m1, m2, m3, m4, type = 'text', title = 'Regression Analysis for ATG Feedback Survey Experiment')
