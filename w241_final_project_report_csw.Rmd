@@ -13,6 +13,9 @@ header-includes:
 library(RCurl)
 library(data.table)
 library(knitr)
+library(ri)
+
+RI_ITERATIONS = 10000
 ```
 
 # 1. Introduction
@@ -90,6 +93,62 @@ One signifcant departure from the primary experiment's design was that we did no
 
 # 4. Results & Discussion
 
+## 4.1 Pilot
+
+```{r}
+# Setting up pilot data
+dt.pilot = n.treat = 134
+n.control = 133
+n.treat.responded = 6
+n.control.responded = 4
+
+dt.pilot = data.table(
+    treat = c(rep(1, n.treat), rep(0, n.control)),
+    responded = c(rep(1, n.treat.responded),                # treat responses
+                  rep(0, n.treat - n.treat.responded),      # treat non-responses
+                  rep(1, n.control.responded),              # control responses
+                  rep(0, n.control - n.control.responded))  # control non-responses
+)
+
+dt.pilot.summary = dt.pilot[, 
+                            .(.N, 
+                              Responses = sum(responded), 
+                              Rate = sum(responded) / .N), 
+                            by=treat]
+```
+
+```{r, results='asis'}
+# Printing pilot summary data
+kable(dt.pilot.summary, digits=3, caption = "Pilot Survey Results", format="pandoc")
+```
+
+```{r, results='asis'}
+# Pilot data analysis using regression
+lm.pilot = lm(responded ~ treat, data=dt.pilot)
+stargazer(lm.pilot, type='latex', title="Regression: Pilot Survey")
+```
+
+```{r}
+# Pilot data analysis using randomization inference
+pilot.perms = genperms(dt.pilot$treat, maxiter=RI_ITERATIONS)
+pilot.probs = genprobexact(dt.pilot$treat)
+pilot.ate = estate(dt.pilot$responded, dt.pilot$treat, prob=pilot.probs); pilot.ate
+
+# Getting p-value under sharp null
+pilot.Ys.null <- genouts(dt.pilot$responded, dt.pilot$treat, ate=0) # generate potential outcomes under sharp null of no effect
+pilot.distout.null <- gendist(pilot.Ys.null, pilot.perms, prob=pilot.probs) # generate sampling dist. under sharp null
+pilot.p = dispdist(pilot.distout.null, pilot.ate)$two.tailed.p.value 
+
+# Getting 95% confidence interval 
+pilot.Ys.alt <- genouts(dt.pilot$responded, dt.pilot$treat, ate=pilot.ate)
+pilot.distout.alt <- gendist(pilot.Ys.alt, pilot.perms, prob=pilot.probs)
+pilot.ci = dispdist(pilot.distout.alt, pilot.ate)$quantile
+
+list(ate = pilot.ate, p = pilot.p, ci = pilot.ci)
+```
+
+
+
 --------------------------------
 Group         N  Responses  Rate
 ----------- --- ---------- ----- 
@@ -101,7 +160,7 @@ Total:      267         10  3.7%
 --------------------------------
 
 
-## 4.1. Experiment 1: ATG All-Hands Meeting
+## 4.2 Experiment 1: ATG All-Hands Meeting
 
 ```{r}
 #csv = getURL('https://raw.githubusercontent.com/winlingit/w241-project-csw/master/rcode/atg_results.csv')
@@ -132,7 +191,7 @@ kable(atg.results, digits=2, caption = "ATG Survey Results", format="pandoc")
 
 \pagebreak
 
-## 4.2. Experiment 2: PTG All-Hands Meeting
+## 4.3 Experiment 2: PTG All-Hands Meeting
 
 
 ```{r}
