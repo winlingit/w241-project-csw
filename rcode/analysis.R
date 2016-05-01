@@ -25,7 +25,7 @@ dt.atg[ treat == 0, Treat := 'control']
 ggplot(dt.atg, aes(x=Block, y=Responses, fill=Block)) + 
   geom_bar(stat='identity') +
   geom_text(aes(x=Block, y=Responses, label=Responses), vjust=-.1) +
-  facet_wrap( ~ treat) +
+  facet_wrap( ~ Treat) +
   ggtitle("ATG Responses by Block") + 
   xlab("") + 
   ylab("Responses") + 
@@ -80,7 +80,6 @@ dispdist(distout.noblock, ate.noblock)  # display characteristics of sampling di
 Ys <- genouts(y,Z,ate=ate.noblock) ## generate potential outcomes under tau = ATE
 distout.noblock <- gendist(Ys,perms.noblock, prob=probs.noblock) # generate sampling dist. under tau = ATE
 dispdist(distout.noblock, ate.noblock)  ## display characteristics of sampling dist. for inference
-
 
 # Estimate ATE with blocking
 perms <- genperms(Z, blockvar=block, maxiter=100000) # Generate 100k additional assignments
@@ -154,10 +153,10 @@ dt.ptg[ treat == 1, Treat := 'treatment']
 dt.ptg[ treat == 0, Treat := 'control']
 
 # Plot the chart of winning
-ggplot(dt.ptg, aes(x=block, y=Responses, fill=block)) + 
+ggplot(dt.ptg, aes(x=Block, y=Responses, fill=Block)) + 
         geom_bar(stat='identity') +
-        geom_text(aes(x=block, y=Responses, label=Responses), vjust=-.1) +
-        facet_wrap( ~ treat) +
+        geom_text(aes(x=Block, y=Responses, label=Responses), vjust=-.1) +
+        facet_wrap( ~ Treat) +
         ggtitle("PTG Responses by Block") + 
         xlab("") + 
         ylab("Responses") + 
@@ -170,7 +169,7 @@ ggplot(dt.ptg, aes(x=block, y=Responses, fill=block)) +
                panel.grid.minor.x=element_blank())
 
 # Plot the chart of proportional winning
-ggplot(dt.ptg, aes(x=block, y=Rate, fill=block)) + 
+ggplot(dt.ptg, aes(x=Block, y=Rate, fill=Block)) + 
         geom_bar(stat='identity') +
         facet_wrap( ~ Treat) +
         ggtitle("PTG Response Rates by Block") + 
