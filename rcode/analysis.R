@@ -1,5 +1,4 @@
 
-
 library(data.table)
 library(ggplot2)
 library(RCurl)
@@ -54,14 +53,19 @@ ggplot(dt.pilot, aes(x=Responded, y=N, fill=Responded)) +
          panel.grid.major.x=element_blank(),
          panel.grid.minor.x=element_blank())
 
-# Analysis of ATG feedback survey results
 
-#csv = getURL('https://raw.githubusercontent.com/winlingit/w241-project-csw/master/rcode/atg_results.csv')
-#dt.atg = data.table(read.csv(textConnection(csv)))
-dt.atg = fread('~/Documents/Berkeley/241/Final\ Project/w241-project-csw/rcode/atg_results.csv')
 
+###### ANALYSIS OF ATG FEEDBACK SURVEY RESULTS ######
+
+# read data from remote git repo
+csv = getURL('https://raw.githubusercontent.com/winlingit/w241-project-csw/master/rcode/atg_results.csv')
+dt.atg = data.table(read.csv(textConnection(csv)))
+# dt.atg = fread('~/Documents/Berkeley/241/Final\ Project/w241-project-csw/rcode/atg_results.csv')
+
+# estimate overall ATE
 dt.atg[ , .(y = sum(Responses)/sum(N)), by = treat][ , y[1]-y[2]]
 
+# calculate response rates in each block
 dt.atg[, Rate := Responses / N]
 dt.atg[ treat == 1, Treat := 'treatment']
 dt.atg[ treat == 0, Treat := 'control']
@@ -97,16 +101,18 @@ ggplot(dt.atg, aes(x=Block, y=Rate, fill=Block)) +
          panel.grid.major.x=element_blank(),
          panel.grid.minor.x=element_blank())
 
-###### Analysis using RI #######
-# recover observations
-dtx = dt.atg[rep(seq(.N), N), !'N', with = F]  # expand table to 352 rows
+
+
+###### ANALYSIS USING RANDOMIZATION INFERENCE #######
+
+# recover observations, from: http://stackoverflow.com/questions/2894775/replicate-each-row-of-data-frame-and-specify-the-number-of-replications-for-each
+dtx = dt.atg[rep(seq(.N), N)]  # expand table to 352 rows
 dtx[ , responded := c(rep(1, max(Responses)), rep(0, .N - max(Responses))), by = CollectorId]  # add var for responded
 dt.atg$Responses == dtx[ , sum(responded), by = CollectorId]$V1  # checksums for total responses for each collector
 
 ### 1. Analysis with "ri" package
 
-## NOTE: This code is largely copy/pasted and hacked from the example code
-# for the dt package
+## NOTE: This code is largely copy/pasted and hacked from the example code for the dt package
 y = dtx$responded
 Z = dtx$treat
 block = dtx$blocknum
@@ -132,13 +138,13 @@ probs <- genprobexact(Z, blockvar=block) # probability of treatment
 ate <- estate(y, Z, prob=probs) # estimate the ATE
 ate
 
-## Conduct Sharp Null Hypothesis Test of Zero Effect for Each Unit
+# Conduct Sharp Null Hypothesis Test of Zero Effect for Each Unit
 
 Ys <- genouts(y, Z, ate=0) # generate potential outcomes under sharp null of no effect
 distout <- gendist(Ys, perms, prob=probs) # generate sampling dist. under sharp null
 dispdist(distout, ate)  # display characteristics of sampling dist. for inference
 
-## Generate Sampling Distribution Around Estimated ATE
+# Generate Sampling Distribution Around Estimated ATE
 
 Ys <- genouts(y,Z,ate=ate) ## generate potential outcomes under tau = ATE
 distout <- gendist(Ys,perms, prob=probs) # generate sampling dist. under tau = ATE
@@ -168,3 +174,15 @@ abline(v = ATE, col = 'red')
 
 p.value = 2*mean(ate.dist >= ATE) # return 2-tailed p-value for estimated ATE
 p.value # p-value < 0.01
+
+
+
+###### ANALYSIS USING REGRESSION ######
+
+# regression models
+m1 = lm(responded ~ treat, data = dtx) # treatment only
+m2 = lm(responded ~ treat + Female, data = dtx) # treatment + female
+m3 = lm(responded ~ treat + Female + Region, data = dtx) treatment + female + region
+# m4 = lm(responded ~ treat + Female*Region, data = dtx)
+
+stargazer(m1, m2, m3, type = 'text', title = 'Regression Analysis for ATG Feedback Survey Experiment')
