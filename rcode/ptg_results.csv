@@ -1,0 +1,22 @@
+Org,Region,Female,has.na,block,blocknum,treat,CollectorName,Responses
+Engineering,EMEA,0,FALSE,_1Engineering1EMEA,1,1,Web Link 1,0
+Engineering,EMEA,0,FALSE,_1Engineering1EMEA,1,0,Web Link 2,0
+Services,APAC,0,FALSE,_1Services1APAC,2,1,Web Link 3,0
+Services,APAC,1,FALSE,_1Services1APAC,2,0,Web Link 4,0
+Services,APAC,0,FALSE,_1Services1APAC,2,0,Web Link 4,0
+Engineering,AMS,0,FALSE,0-Engineering-AMS,3,1,Web Link 5,4
+Engineering,AMS,0,FALSE,0-Engineering-AMS,3,0,Web Link 6,3
+Services,AMS,0,FALSE,0-Services-AMS,4,1,Web Link 7,8
+Services,AMS,0,FALSE,0-Services-AMS,4,0,Web Link 8,3
+Services,EMEA,0,FALSE,0-Services-EMEA,5,1,Web Link 9,2
+Services,EMEA,0,FALSE,0-Services-EMEA,5,0,Web Link 10,1
+Engineering,AMS,1,FALSE,1-Engineering-AMS,6,1,Web Link 11,3
+Engineering,AMS,1,FALSE,1-Engineering-AMS,6,0,Web Link 12,0
+Services,AMS,1,FALSE,1-Services-AMS,7,1,Web Link 13,6
+Services,AMS,1,FALSE,1-Services-AMS,7,0,Web Link 14,0
+Services,EMEA,1,FALSE,1-Services-EMEA,8,1,Web Link 15,1
+Services,EMEA,1,FALSE,1-Services-EMEA,8,0,Web Link 16,2
+Services,AMS,NA,TRUE,HasNas,9,0,Web Link 18,0
+Engineering,AMS,NA,TRUE,HasNas,9,0,Web Link 18,0
+NA,AMS,0,TRUE,HasNas,9,0,Web Link 18,0
+NA,AMS,1,TRUE,HasNas,9,0,Web Link 18,0

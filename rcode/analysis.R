@@ -6,62 +6,7 @@ library(stargazer)
 library(ri)
 
 
-###### ANALYSIS OF PILOT STUDY ######
-
-n.treat = 134
-n.control = 133
-n.treat.responded = 6
-n.control.responded = 4
-
-pilot.responded = c(rep(1, n.treat.responded),                # treat responses
-                    rep(0, n.treat - n.treat.responded),      # treat non-responses
-                    rep(1, n.control.responded),              # control responses
-                    rep(0, n.control - n.control.responded))  # control non-responses
-pilot.treat = c(rep(1, n.treat), rep(0, n.control))
-
-pilot.perms <- genperms(pilot.treat) # all possible permutations
-pilot.probs <- genprobexact(pilot.treat) # probability of treatment
-pilot.ate <- estate(pilot.responded, pilot.treat, prob=pilot.probs) # estimate the ATE
-pilot.ate
-
-# Distribution under sharp null
-pilot.Ys <- genouts(pilot.responded, pilot.treat,ate=0) # generate potential outcomes under sharp null of no effect
-pilot.distout <- gendist(pilot.Ys,pilot.perms, prob=pilot.probs) # generate sampling dist. under sharp null
-dispdist(pilot.distout, pilot.ate)  # display characteristics of sampling dist. for inference
-
-# 95% CI
-pilot.Ys <- genouts(pilot.responded, pilot.treat,ate=pilot.ate) ## generate potential outcomes under tau = ATE
-pilot.distout <- gendist(pilot.Ys,pilot.perms, prob=pilot.probs) # generate sampling dist. under tau = ATE
-dispdist(pilot.distout, pilot.ate)  ## display characteristics of sampling dist. for inference
-
-dt.pilot = data.table(treat = pilot.treat, response = pilot.responded)
-dt.pilot = dt.pilot[, .N, by=c('response', 'treat')]
-dt.pilot[response == 1, Responded := 'yes']
-dt.pilot[response == 0, Responded := 'no']
-dt.pilot[, Responded := factor(Responded)]
-dt.pilot[treat == 1, treated := 'treatment']
-dt.pilot[treat == 0, treated := 'control']
-dt.pilot[, treated := factor(treated)]
-
-# Plot the chart of shame
-ggplot(dt.pilot, aes(x=Responded, y=N, fill=Responded)) + 
-  geom_bar(stat='identity') +
-  geom_text(aes(x=Responded, y=N, label=N), vjust=-.1) +
-  facet_wrap( ~ treated) +
-  ggtitle("Pilot results") + 
-  xlab("") + 
-  ylab("Responses") + 
-  theme( axis.line=element_blank(), 
-         axis.text.x=element_blank(),
-         axis.ticks.x=element_blank(),
-         axis.title.x=element_blank(),
-         panel.border=element_blank(),
-         panel.grid.major.x=element_blank(),
-         panel.grid.minor.x=element_blank())
-
-
-
-###### ANALYSIS OF ATG FEEDBACK SURVEY RESULTS ######
+###### ANALYSIS OF ATG EXPERIMENT ######
 
 # read data from remote git repo
 csv = getURL('https://raw.githubusercontent.com/winlingit/w241-project-csw/master/rcode/atg_results.csv')
@@ -109,19 +54,19 @@ ggplot(dt.atg, aes(x=Block, y=Rate, fill=Block)) +
 
 
 
-###### ANALYSIS USING RANDOMIZATION INFERENCE #######
+###### ATG EXPERIMENT: RANDOMIZATION INFERENCE #######
 
 # recover observations, from: http://stackoverflow.com/questions/2894775/replicate-each-row-of-data-frame-and-specify-the-number-of-replications-for-each
-dtx = dt.atg[rep(seq(.N), N)]  # expand table to 352 rows
-dtx[ , responded := c(rep(1, max(Responses)), rep(0, .N - max(Responses))), by = CollectorId]  # add var for responded
-dt.atg$Responses == dtx[ , sum(responded), by = CollectorId]$V1  # checksums for total responses for each collector
+dt.atgx = dt.atg[rep(seq(.N), N)]  # expand table to 352 rows
+dt.atgx[ , responded := c(rep(1, max(Responses)), rep(0, .N - max(Responses))), by = CollectorId]  # add var for responded
+dt.atg$Responses == dt.atgx[ , sum(responded), by = CollectorId]$V1  # checksums for total responses for each collector
 
 ### 1. Analysis with "ri" package
 
 ## NOTE: This code is largely copy/pasted and hacked from the example code for the dt package
-y = dtx$responded
-Z = dtx$treat
-block = dtx$blocknum
+y = dt.atgx$responded
+Z = dt.atgx$treat
+block = dt.atgx$blocknum
 
 # Estimate ATE without blocking
 perms.noblock <- genperms(Z, maxiter=100000) # Generate 100k additional assignments 
@@ -169,7 +114,7 @@ sim.ate = function(dt) {
         ATE
 }
 
-ate.dist = replicate(10000, sim.ate(dtx)) # generate sampling distribution for ATE
+ate.dist = replicate(10000, sim.ate(dt.atgx)) # generate sampling distribution for ATE
 plot(density(ate.dist), main = "Distribution of ATE", col = "black", xlab = NA)
 abline(v = ATE, col = 'red')
 
@@ -178,12 +123,16 @@ p.value # p-value < 0.01
 
 
 
-###### ANALYSIS USING REGRESSION ######
+###### ATG EXPERIMENT: REGRESSION ANALYSIS ######
 
 # regression models
-m1 = lm(responded ~ treat, data = dtx) # treatment only
-m2 = lm(responded ~ treat + Female, data = dtx) # treatment + female
-m3 = lm(responded ~ treat + Female + Org, data = dtx) # treatment + female + org
-m4 = lm(responded ~ treat + Female + Org + Region, data = dtx) # treatment + female + org + region
+m1 = lm(responded ~ treat, data = dt.atgx) # treatment only
+m2 = lm(responded ~ treat + Female, data = dt.atgx) # treatment + female
+m3 = lm(responded ~ treat + Female + Org, data = dt.atgx) # treatment + female + org
+m4 = lm(responded ~ treat + Female + Org + Region, data = dt.atgx) # treatment + female + org + region
 
 stargazer(m1, m2, m3, m4, type = 'text', title = 'Regression Analysis for ATG Feedback Survey Experiment')
+
+
+###### PTG EXPERIMENT: REGRESSION ANALYSIS ######
+
