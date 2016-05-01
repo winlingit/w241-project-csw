@@ -24,9 +24,15 @@ pilot.probs <- genprobexact(pilot.treat) # probability of treatment
 pilot.ate <- estate(pilot.responded, pilot.treat, prob=pilot.probs) # estimate the ATE
 pilot.ate
 
+# Distribution under sharp null
 pilot.Ys <- genouts(pilot.responded, pilot.treat,ate=0) # generate potential outcomes under sharp null of no effect
 pilot.distout <- gendist(pilot.Ys,pilot.perms, prob=pilot.probs) # generate sampling dist. under sharp null
 dispdist(pilot.distout, pilot.ate)  # display characteristics of sampling dist. for inference
+
+# 95% CI
+pilot.Ys <- genouts(pilot.responded, pilot.treat,ate=pilot.ate) ## generate potential outcomes under tau = ATE
+pilot.distout <- gendist(pilot.Ys,pilot.perms, prob=pilot.probs) # generate sampling dist. under tau = ATE
+dispdist(pilot.distout, pilot.ate)  ## display characteristics of sampling dist. for inference
 
 dt.pilot = data.table(treat = pilot.treat, response = pilot.responded)
 dt.pilot = dt.pilot[, .N, by=c('response', 'treat')]
@@ -74,7 +80,7 @@ dt.atg[ treat == 0, Treat := 'control']
 ggplot(dt.atg, aes(x=Block, y=Responses, fill=Block)) + 
   geom_bar(stat='identity') +
   geom_text(aes(x=Block, y=Responses, label=Responses), vjust=-.1) +
-  facet_wrap( ~ Treat) +
+  facet_wrap( ~ treat) +
   ggtitle("ATG Responses by Block") + 
   xlab("") + 
   ylab("Responses") + 
@@ -145,11 +151,6 @@ distout <- gendist(Ys, perms, prob=probs) # generate sampling dist. under sharp 
 dispdist(distout, ate)  # display characteristics of sampling dist. for inference
 
 # Generate Sampling Distribution Around Estimated ATE
-
-Ys <- genouts(y,Z,ate=ate) ## generate potential outcomes under tau = ATE
-distout <- gendist(Ys,perms, prob=probs) # generate sampling dist. under tau = ATE
-dispdist(distout, ate)  ## display characteristics of sampling dist. for inference
-
 
 ### 2. Analysis with manual RI
 

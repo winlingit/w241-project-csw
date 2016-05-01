@@ -13,6 +13,10 @@ header-includes:
 library(RCurl)
 library(data.table)
 library(knitr)
+library(ri)
+library(stargazer)
+
+RI_ITERATIONS = 1000
 ```
 
 # 1. Introduction
@@ -90,6 +94,74 @@ One signifcant departure from the primary experiment's design was that we did no
 
 # 4. Results & Discussion
 
+```{r}
+# Function to calcualte ATE, P-value and 95% confidence interval
+# arguments:
+#  Z: Vector of treatment assignment
+#  Y: Vector of outcomes
+#  block (optional): Vector of block numbers
+ri.test = function(Z, Y, block=NULL) {
+  perms = genperms(Z, blockvar=block, maxiter=RI_ITERATIONS)  # Permutations of treatment assignment
+  probs = genprobexact(Z, blockvar=block) # Probability of treatment assignment
+  ate = estate(Y, Z, prob = probs)
+  
+  # Getting p-value under sharp null
+  ys.null = genouts(Y, Z, ate=0) # Potential outcomes under sharp null
+  distout.null = gendist(ys.null, perms, prob = probs) # Outcome distribution under sharp null
+  p = dispdist(distout.null, ate, display.plot=FALSE)$two.tailed.p.value
+  
+  # Getting 95% CI
+  ys.alt = genouts(Y, Z, ate=ate) # Potential outcomes under alternative hypothesis
+  distout.alt = gendist(ys.alt, perms, prob = probs) # Outcome distribution under alternative
+  ci = dispdist(distout.alt, ate, display.plot=FALSE)$quantile
+  
+  list(ate = ate, p = p, ci = ci)
+}
+```
+
+
+## 4.1 Pilot
+
+```{r}
+# Setting up pilot data
+dt.pilot = n.treat = 134
+n.control = 133
+n.treat.responded = 6
+n.control.responded = 4
+
+dt.pilot = data.table(
+    treat = c(rep(1, n.treat), rep(0, n.control)),
+    responded = c(rep(1, n.treat.responded),                # treat responses
+                  rep(0, n.treat - n.treat.responded),      # treat non-responses
+                  rep(1, n.control.responded),              # control responses
+                  rep(0, n.control - n.control.responded))  # control non-responses
+)
+
+dt.pilot.summary = dt.pilot[, 
+                            .(.N, 
+                              Responses = sum(responded), 
+                              Rate = sum(responded) / .N), 
+                            by=treat]
+```
+
+```{r, results='asis'}
+# Printing pilot summary data
+kable(dt.pilot.summary, digits=3, caption = "Pilot Survey Results", format="pandoc")
+```
+
+```{r, results='asis'}
+# Pilot data analysis using regression
+lm.pilot = lm(responded ~ treat, data=dt.pilot)
+stargazer(lm.pilot, type='latex', title="Regression: Pilot Survey")
+```
+
+```{r}
+# Pilot data analysis using randomization inference
+ri.test(dt.pilot$treat, dt.pilot$responded)
+```
+
+
+
 --------------------------------
 Group         N  Responses  Rate
 ----------- --- ---------- ----- 
@@ -101,24 +173,26 @@ Total:      267         10  3.7%
 --------------------------------
 
 
-## 4.1. Experiment 1: ATG All-Hands Meeting
+## 4.2 Experiment 1: ATG All-Hands Meeting
 
 ```{r}
 #csv = getURL('https://raw.githubusercontent.com/winlingit/w241-project-csw/master/rcode/atg_results.csv')
 #dt = data.table(read.csv(textConnection(csv)))
-dt.atg=fread('~/Documents/Berkeley/241/Final\ Project/w241-project-csw/rcode/atg_results.csv')
-dt.atg[Female == 0, Gender := 'M']
-dt.atg[Female == 1, Gender := 'F']
-dt.atg[, Y := Responses / N]
+dt.atg.sum=fread('~/Documents/Berkeley/241/Final\ Project/w241-project-csw/rcode/atg_results.csv')
+dt.atg.sum[Female == 0, Gender := 'M']
+dt.atg.sum[Female == 1, Gender := 'F']
+dt.atg.sum[, Y := Responses / N]
 ```
 
 ```{r, results='asis'}
-atg.stats = dt.atg[order(Org, Region, Gender, treat), .(Org, Region, Gender, Treat=treat, N)]
+# Covariate/block table
+atg.stats = dt.atg.sum[order(Org, Region, Gender, treat), .(Org, Region, Gender, Treat=treat, N)]
 kable(atg.stats, digits=2, caption = "ATG Survey Blocks", format = 'pandoc')
 ```
 
 ```{r}
-atg.results = dcast(dt.atg, 
+# Results summary
+atg.results = dcast(dt.atg.sum, 
                     blocknum + Org + Region + Gender ~ treat, 
                     value.var= c('N', 'Responses', 'Y'))
 
@@ -130,9 +204,38 @@ atg.results = atg.results[,
 kable(atg.results, digits=2, caption = "ATG Survey Results", format="pandoc")
 ```
 
+```{r}
+# Data reshaped to one row per partcipant.
+dt.atg = dt.atg.sum[rep(seq(.N), N), 
+                    .(CollectorId, blocknum, Org, Region, Female, Treat = treat, Responses), 
+                    with = T]  # expand table to 352 rows
+
+dt.atg[ , 
+        Responded := c(rep(1, max(Responses)), 
+                       rep(0, .N - max(Responses))), 
+        by = CollectorId]  # add var for responded
+dt.atg.sum$Responses == dt.atg[ , sum(Responded), by = CollectorId]$V1  # checksums for total responses for each collector
+```
+
+```{r}
+# Analysis using regression
+lm.atg = lm(Responded ~ Treat, data=dt.atg)
+stargazer(lm.atg, type='text', title="Regression: ATG Survey")
+```
+
+```{r}
+# Analysis using randomizatino inference (not taking blocks into account)
+ri.test(dt.atg$Treat, dt.atg$Responded)
+```
+
+```{r}
+# Analysis using randomizatino inference (with blocks)
+ri.test(dt.atg$Treat, dt.atg$Responded, block=dt.atg$blocknum)
+```
+
 \pagebreak
 
-## 4.2. Experiment 2: PTG All-Hands Meeting
+## 4.3 Experiment 2: PTG All-Hands Meeting
 
 
 ```{r}
