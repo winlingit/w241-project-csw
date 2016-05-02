@@ -6,6 +6,10 @@ library(stargazer)
 library(ri)
 
 
+############################
+###### ATG EXPERIMENT ######
+############################
+
 ###### ATG EXPERIMENT: EXPLORATORY ANALYSIS ######
 
 # read data from remote git repo
@@ -24,7 +28,7 @@ dt.atg[ treat == 0, Treat := 'control']
 # Plot the chart of winning
 ggplot(dt.atg, aes(x=Block, y=Responses, fill=Block)) + 
   geom_bar(stat='identity') +
-  geom_text(aes(x=Block, y=Responses, label=Responses), vjust=-.1) +
+  geom_text(aes(x=Block, y=Responses, label=Responses), vjust=-.1, size=3) +
   facet_wrap( ~ Treat) +
   ggtitle("ATG Responses by Block") + 
   xlab("") + 
@@ -40,6 +44,7 @@ ggplot(dt.atg, aes(x=Block, y=Responses, fill=Block)) +
 # Plot the chart of proportional winning
 ggplot(dt.atg, aes(x=Block, y=Rate, fill=Block)) + 
   geom_bar(stat='identity') +
+  geom_text(aes(x=Block, y=Rate, label=round(Rate, digits=2)), vjust=-.1, size=3) +
   facet_wrap( ~ Treat) +
   ggtitle("ATG Response Rates by Block") + 
   xlab("") + 
@@ -53,7 +58,7 @@ ggplot(dt.atg, aes(x=Block, y=Rate, fill=Block)) +
          panel.grid.minor.x=element_blank())
 
 
-###### ATG EXPERIMENT: RANDOMIZATION INFERENCE #######
+###### ATG EXPERIMENT: RANDOMIZATION INFERENCE ######
 
 # recover observations, from: http://stackoverflow.com/questions/2894775/replicate-each-row-of-data-frame-and-specify-the-number-of-replications-for-each
 dt.atgx = dt.atg[rep(seq(.N), N)]  # expand table to 352 rows
@@ -66,20 +71,6 @@ dt.atg$Responses == dt.atgx[ , sum(responded), by = CollectorName]$V1  # checksu
 y = dt.atgx$responded
 Z = dt.atgx$treat
 block = dt.atgx$blocknum
-
-# Estimate ATE without blocking
-perms.noblock <- genperms(Z, maxiter=100000) # Generate 100k additional assignments 
-probs.noblock <- genprobexact(Z) # probability of treatment
-ate.noblock <- estate(y, Z, prob=probs.noblock) # estimate the ATE
-ate.noblock
-
-Ys <- genouts(y, Z ,ate=0) # generate potential outcomes under sharp null of no effect
-distout.noblock <- gendist(Ys, perms.noblock, prob=probs.noblock) # generate sampling dist. under sharp null
-dispdist(distout.noblock, ate.noblock)  # display characteristics of sampling dist. for inference
-
-Ys <- genouts(y,Z,ate=ate.noblock) ## generate potential outcomes under tau = ATE
-distout.noblock <- gendist(Ys,perms.noblock, prob=probs.noblock) # generate sampling dist. under tau = ATE
-dispdist(distout.noblock, ate.noblock)  ## display characteristics of sampling dist. for inference
 
 # Estimate ATE with blocking
 perms <- genperms(Z, blockvar=block, maxiter=100000) # Generate 100k additional assignments
@@ -108,15 +99,15 @@ assign.treatment <- function(n) {
 # generate sampling distribution for ATE
 sim.ate = function(dt) {
         dt[ , treat.ri := assign.treatment(.N), by = block] # randomize assignments in each block
-        ATE = dt[ , .(y = sum(responded)/.N), by = treat.ri][ , y[1]-y[2]] # estimate ATE for each assignment
-        ATE
+        ate = dt[ , .(y = sum(responded)/.N), by = treat.ri][ , y[1]-y[2]] # estimate ATE for each assignment
+        ate
 }
 
 ate.dist = replicate(10000, sim.ate(dt.atgx)) # generate sampling distribution for ATE
 plot(density(ate.dist), main = "Distribution of ATE", col = "black", xlab = NA)
-abline(v = ATE, col = 'red')
+abline(v = ate, col = 'red')
 
-p.value = 2*mean(ate.dist >= ATE) # return 2-tailed p-value for estimated ATE
+p.value = mean(ate.dist >= ate) # return 1-tailed p-value for estimated ATE
 p.value # p-value < 0.01
 
 
@@ -131,7 +122,9 @@ m4.atg = lm(responded ~ treat + Female + Org + Region, data = dt.atgx) # treatme
 stargazer(m1.atg, m2.atg, m3.atg, m4.atg, type = 'text', title = 'Regression Analysis for ATG Feedback Survey Experiment')
 
 
-
+############################
+###### PTG EXPERIMENT ######
+############################
 
 ###### PTG EXPERIMENT: EXPLORATORY ANALYSIS ######
 
@@ -155,7 +148,7 @@ dt.ptg[ treat == 0, Treat := 'control']
 # Plot the chart of winning
 ggplot(dt.ptg, aes(x=Block, y=Responses, fill=Block)) + 
         geom_bar(stat='identity') +
-        geom_text(aes(x=Block, y=Responses, label=Responses), vjust=-.1) +
+        geom_text(aes(x=Block, y=Responses, label=Responses), vjust=-.1, size=3) +
         facet_wrap( ~ Treat) +
         ggtitle("PTG Responses by Block") + 
         xlab("") + 
@@ -172,6 +165,7 @@ ggplot(dt.ptg, aes(x=Block, y=Responses, fill=Block)) +
 ggplot(dt.ptg, aes(x=Block, y=Rate, fill=Block)) + 
         geom_bar(stat='identity') +
         facet_wrap( ~ Treat) +
+        geom_text(aes(x=Block, y=Rate, label=round(Rate, digits=2)), vjust=-.1, size=3) +
         ggtitle("PTG Response Rates by Block") + 
         xlab("") + 
         ylab("Response Rate") + 
@@ -193,3 +187,28 @@ m3.ptg = lm(responded ~ treat + Female + Org, data = dt.ptgx) # treatment + fema
 m4.ptg = lm(responded ~ treat + Female + Org + Region, data = dt.ptgx) # treatment + female + org + region
 
 stargazer(m1.ptg, m2.ptg, m3.ptg, m4.ptg, type = 'text', title = 'Regression Analysis for PTG Feedback Survey Experiment')
+
+
+
+
+####################
+###### EXTRAS ######
+####################
+
+###### ATG EXPERIMENT: RANDOMIZATION INFERENCE #######
+
+# Note: moved from main analysis, since block randomization built into results already 
+
+# Estimate ATE without blocking
+perms.noblock <- genperms(Z, maxiter=100000) # Generate 100k additional assignments 
+probs.noblock <- genprobexact(Z) # probability of treatment
+ate.noblock <- estate(y, Z, prob=probs.noblock) # estimate the ATE
+ate.noblock
+
+Ys <- genouts(y, Z ,ate=0) # generate potential outcomes under sharp null of no effect
+distout.noblock <- gendist(Ys, perms.noblock, prob=probs.noblock) # generate sampling dist. under sharp null
+dispdist(distout.noblock, ate.noblock)  # display characteristics of sampling dist. for inference
+
+Ys <- genouts(y,Z,ate=ate.noblock) ## generate potential outcomes under tau = ATE
+distout.noblock <- gendist(Ys,perms.noblock, prob=probs.noblock) # generate sampling dist. under tau = ATE
+dispdist(distout.noblock, ate.noblock)  ## display characteristics of sampling dist. for inference
