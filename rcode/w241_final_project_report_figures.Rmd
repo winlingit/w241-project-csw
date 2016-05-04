@@ -151,5 +151,7 @@ m4.ptg = lm(responded ~ treat + Female + Org + Region, data = dt.ptgx) # treatme
 # show all models
 stargazer(m1.ptg, m2.ptg, m3.ptg, m4.ptg, type = 'latex', title = 'Regression Analysis for PTG Feedback Survey Experiment')
 
-stargazer(m1.atg, m1.ptg, type = 'latex', title = 'Regression Analysis for ATG and PTG Feedback Survey Experiments', column.labels = c('ATG','PTG'))
+stargazer(m1.atg, m1.ptg, type = 'latex', title = 'Regression Analysis for ATG and PTG Feedback Survey Experiments', column.labels = c('ATG','PTG'),
+          dep.var.labels = 'Responded to Survey',
+          covariate.labels = 'Personalization')
 ```
