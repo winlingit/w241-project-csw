@@ -68,6 +68,15 @@ m4.atg = lm(responded ~ treat + Female + Org + Region, data = dt.atgx) # treatme
 # show all regression models
 stargazer(m1.atg, m2.atg, m3.atg, m4.atg, type = 'text', title = 'Regression Analysis for ATG Feedback Survey Experiment')
 
+# regression models without Americas
+dt.atgx.mini <- dt.atgx[Region != 'AMS', ]
+m5.atg = lm(responded ~ treat, data = dt.atgx.mini) # treatment only
+m6.atg = lm(responded ~ treat + Female, data = dt.atgx.mini) # treatment + female
+m7.atg = lm(responded ~ treat + Female + Org, data = dt.atgx.mini) # treatment + female + org
+m8.atg = lm(responded ~ treat + Female + Org + Region, data = dt.atgx.mini) # treatment + female + org + region
+
+# show all models without Americas
+stargazer(m5.ptg, m6.ptg, m7.ptg, m8.ptg, type = 'text', title = 'Regression Analysis for ATG Feedback Survey Experiment excluding Americas')
 
 ############################
 ###### PTG EXPERIMENT ######
@@ -136,9 +145,15 @@ m4.ptg = lm(responded ~ treat + Female + Org + Region, data = dt.ptgx) # treatme
 # show all models
 stargazer(m1.ptg, m2.ptg, m3.ptg, m4.ptg, type = 'text', title = 'Regression Analysis for PTG Feedback Survey Experiment')
 
+# regression models without Americas
+dt.ptgx.mini <- dt.ptgx[Region != 'AMS', ]
+m5.ptg = lm(responded ~ treat, data = dt.ptgx.mini) # treatment only
+m6.ptg = lm(responded ~ treat + Female, data = dt.ptgx.mini) # treatment + female
+m7.ptg = lm(responded ~ treat + Female + Org, data = dt.ptgx.mini) # treatment + female + org
+m8.ptg = lm(responded ~ treat + Female + Org + Region, data = dt.ptgx.mini) # treatment + female + org + region
 
-
-
+# show all models without Americas
+stargazer(m5.ptg, m6.ptg, m7.ptg, m8.ptg, type = 'text', title = 'Regression Analysis for PTG Feedback Survey Experiment excluding Americas')
 
 ####################
 ###### EXTRAS ######
