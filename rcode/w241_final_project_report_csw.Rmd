@@ -1,0 +1,396 @@
+---
+title: 'Final Project Report: A Study of the Effects of Personalization on Survey Response Rates'
+author: 'Carlos Eduardo Rodriguez, Sean Underwood, Winston Lin'
+date: \today
+output: pdf_document
+header-includes:
+    - \usepackage{caption}
+---
+
+\captionsetup[table]{labelformat=empty}
+
+
+
+# Figures for Final Report
+
+```{r}
+library(data.table)
+library(ggplot2)
+library(RCurl)
+library(stargazer)
+library(ri)
+library(knitr)
+
+
+############################
+###### ATG EXPERIMENT ######
+############################
+
+###### ATG EXPERIMENT: EXPLORATORY ANALYSIS ######
+
+# read data from remote git repo
+csv = getURL('https://raw.githubusercontent.com/winlingit/w241-project-csw/master/rcode/atg_results.csv')
+dt.atg = data.table(read.csv(textConnection(csv)))
+
+# recover observations, from: http://stackoverflow.com/questions/2894775/replicate-each-row-of-data-frame-and-specify-the-number-of-replications-for-each
+dt.atgx = dt.atg[rep(seq(.N), N)]  # expand table to 352 rows
+dt.atgx[ , responded := c(rep(1, max(Responses)), rep(0, .N - max(Responses))), by = CollectorName]  # add var for responded
+dt.atg$Responses == dt.atgx[ , sum(responded), by = CollectorName]$V1  # checksums for total responses for each collector
+
+# estimate overall ATE
+dt.atg[ , .(y = sum(Responses)/sum(N)), by = treat][ , y[1]-y[2]]
+
+# calculate response rates in each block
+dt.atg[, Rate := Responses / N]
+dt.atg[ treat == 1, Treat := 'treatment']
+dt.atg[ treat == 0, Treat := 'control']
+
+# Plot the chart of winning
+ggplot(dt.atg, aes(x=Block, y=Responses, fill=Block)) + 
+  geom_bar(stat='identity') +
+  geom_text(aes(x=Block, y=Responses, label=Responses), vjust=-.1, size=3) +
+  facet_wrap( ~ Treat) +
+  ggtitle("ATG Responses by Block") + 
+  xlab("") + 
+  ylab("Responses") + 
+  theme( axis.line=element_blank(), 
+         axis.text.x=element_blank(),
+         axis.ticks.x=element_blank(),
+         axis.title.x=element_blank(),
+         panel.border=element_blank(),
+         panel.grid.major.x=element_blank(),
+         panel.grid.minor.x=element_blank())
+
+# Plot the chart of proportional winning
+ggplot(dt.atg, aes(x=Block, y=Rate, fill=Block)) + 
+  geom_bar(stat='identity') +
+  geom_text(aes(x=Block, y=Rate, label=round(Rate, digits=2)), vjust=-.1, size=3) +
+  facet_wrap( ~ Treat) +
+  ggtitle("ATG Response Rates by Block") + 
+  xlab("") + 
+  ylab("Response Rate") + 
+  theme( axis.line=element_blank(), 
+         axis.text.x=element_blank(),
+         axis.ticks.x=element_blank(),
+         axis.title.x=element_blank(),
+         panel.border=element_blank(),
+         panel.grid.major.x=element_blank(),
+         panel.grid.minor.x=element_blank())
+
+
+###### ATG EXPERIMENT: REGRESSION ANALYSIS ######
+
+# regression models
+m1.atg = lm(responded ~ treat, data = dt.atgx) # treatment only
+m2.atg = lm(responded ~ treat + Female, data = dt.atgx) # treatment + female
+m3.atg = lm(responded ~ treat + Female + Org, data = dt.atgx) # treatment + female + org
+m4.atg = lm(responded ~ treat + Female + Org + Region, data = dt.atgx) # treatment + female + org + region
+
+# show all regression models
+stargazer(m1.atg, m2.atg, m3.atg, m4.atg, type = 'latex', title = 'Regression Analysis for ATG Feedback Survey Experiment')
+
+# regression models without Americas
+dt.atgx.mini <- dt.atgx[Region != 'AMS', ]
+m5.atg = lm(responded ~ treat, data = dt.atgx.mini) # treatment only
+m6.atg = lm(responded ~ treat + Female, data = dt.atgx.mini) # treatment + female
+m7.atg = lm(responded ~ treat + Female + Org, data = dt.atgx.mini) # treatment + female + org
+m8.atg = lm(responded ~ treat + Female + Org + Region, data = dt.atgx.mini) # treatment + female + org + region
+
+# show all models without Americas
+stargazer(m5.ptg, m6.ptg, m7.ptg, m8.ptg, type = 'latex', title = 'Regression Analysis for ATG Feedback Survey Experiment excluding Americas')
+
+############################
+###### PTG EXPERIMENT ######
+############################
+
+###### PTG EXPERIMENT: EXPLORATORY ANALYSIS ######
+
+# read data from remote git repo
+csv = getURL('https://raw.githubusercontent.com/winlingit/w241-project-csw/master/rcode/ptg_results.csv')
+dt.ptg = data.table(read.csv(textConnection(csv)))
+
+# recover observations
+dt.ptgx = dt.ptg[rep(seq(.N), N)]  # expand table to 352 rows
+dt.ptgx[ , responded := c(rep(1, max(Responses)), rep(0, .N - max(Responses))), by = CollectorName]  # add var for responded
+dt.ptg$Responses == dt.ptgx[ , sum(responded), by = CollectorName]$V1  # checksums for total responses for each collector
+
+# estimate overall ATE
+dt.ptg[ , .(y = sum(Responses)/sum(N)), by = treat][ , y[1]-y[2]]
+
+# calculate response rates in each block
+dt.ptg[, Rate := Responses / N]
+dt.ptg[ treat == 1, Treat := 'treatment']
+dt.ptg[ treat == 0, Treat := 'control']
+
+# Plot the chart of winning
+ggplot(dt.ptg, aes(x=Block, y=Responses, fill=Block)) + 
+        geom_bar(stat='identity') +
+        geom_text(aes(x=Block, y=Responses, label=Responses), vjust=-.1, size=3) +
+        facet_wrap( ~ Treat) +
+        ggtitle("PTG Responses by Block") + 
+        xlab("") + 
+        ylab("Responses") + 
+        theme( axis.line=element_blank(), 
+               axis.text.x=element_blank(),
+               axis.ticks.x=element_blank(),
+               axis.title.x=element_blank(),
+               panel.border=element_blank(),
+               panel.grid.major.x=element_blank(),
+               panel.grid.minor.x=element_blank())
+
+# Plot the chart of proportional winning
+ggplot(dt.ptg, aes(x=Block, y=Rate, fill=Block)) + 
+        geom_bar(stat='identity') +
+        facet_wrap( ~ Treat) +
+        geom_text(aes(x=Block, y=Rate, label=round(Rate, digits=2)), vjust=-.1, size=3) +
+        ggtitle("PTG Response Rates by Block") + 
+        xlab("") + 
+        ylab("Response Rate") + 
+        theme( axis.line=element_blank(), 
+               axis.text.x=element_blank(),
+               axis.ticks.x=element_blank(),
+               axis.title.x=element_blank(),
+               panel.border=element_blank(),
+               panel.grid.major.x=element_blank(),
+               panel.grid.minor.x=element_blank())
+
+
+###### PTG EXPERIMENT: REGRESSION ANALYSIS ######
+
+# regression models
+m1.ptg = lm(responded ~ treat, data = dt.ptgx) # treatment only
+m2.ptg = lm(responded ~ treat + Female, data = dt.ptgx) # treatment + female
+m3.ptg = lm(responded ~ treat + Female + Org, data = dt.ptgx) # treatment + female + org
+m4.ptg = lm(responded ~ treat + Female + Org + Region, data = dt.ptgx) # treatment + female + org + region
+
+# show all models
+stargazer(m1.ptg, m2.ptg, m3.ptg, m4.ptg, type = 'text', title = 'Regression Analysis for PTG Feedback Survey Experiment')
+
+# regression models without Americas
+dt.ptgx.mini <- dt.ptgx[Region != 'AMS', ]
+m5.ptg = lm(responded ~ treat, data = dt.ptgx.mini) # treatment only
+m6.ptg = lm(responded ~ treat + Female, data = dt.ptgx.mini) # treatment + female
+m7.ptg = lm(responded ~ treat + Female + Org, data = dt.ptgx.mini) # treatment + female + org
+m8.ptg = lm(responded ~ treat + Female + Org + Region, data = dt.ptgx.mini) # treatment + female + org + region
+
+# show all models without Americas
+stargazer(m5.ptg, m6.ptg, m7.ptg, m8.ptg, type = 'text', title = 'Regression Analysis for PTG Feedback Survey Experiment excluding Americas')
+```
+
+
+### Data Collection
+
+
+# 3. Pilot Study
+
+We also performed a pilot study with help from the datascience@berkeley staff. They were conducting an email survey of the MIDS student body to study engagement with the _Applications in Data Science_ webinar series, and graciously agreed to help us test some of our procedures on this survey.
+
+## 3.1 Pilot Design
+
+The treatment in the pilot survey was roughly the same as in the primary survey, with control paricipants receiving an email with a generic salutation and treatment participants receiving a personalized salutation that included their first name. In order to remain consistent with existing precedent, the exact wording of the email saluatation was slightly different: "Hello Everyone" for control, and "Hello [studen's first name]" for treatment.
+
+One signifcant departure from the primary experiment's design was that we did not use block random assignment for the pilot study. Gender was not included because we did not have easy access to that information, and department was not included because that variable does not apply in this case. This did unfortunately limit our ability to use the pilot as a full dress rehearsal, since it involved significantly less logistic complexity.
+
+# 4. Results & Discussion
+
+```{r}
+# Function to calcualte ATE, P-value and 95% confidence interval
+# arguments:
+#  Z: Vector of treatment assignment
+#  Y: Vector of outcomes
+#  block (optional): Vector of block numbers
+ri.test = function(Z, Y, block=NULL) {
+  perms = genperms(Z, blockvar=block, maxiter=RI_ITERATIONS)  # Permutations of treatment assignment
+  probs = genprobexact(Z, blockvar=block) # Probability of treatment assignment
+  ate = estate(Y, Z, prob = probs)
+  
+  # Getting p-value under sharp null
+  ys.null = genouts(Y, Z, ate=0) # Potential outcomes under sharp null
+  distout.null = gendist(ys.null, perms, prob = probs) # Outcome distribution under sharp null
+  p = dispdist(distout.null, ate, display.plot=FALSE)$two.tailed.p.value
+  
+  # Getting 95% CI
+  ys.alt = genouts(Y, Z, ate=ate) # Potential outcomes under alternative hypothesis
+  distout.alt = gendist(ys.alt, perms, prob = probs) # Outcome distribution under alternative
+  ci = dispdist(distout.alt, ate, display.plot=FALSE)$quantile
+  
+  list(ate = ate, p = p, ci = ci)
+}
+```
+
+
+## 4.1 Pilot
+
+```{r}
+# Setting up pilot data
+dt.pilot = n.treat = 134
+n.control = 133
+n.treat.responded = 6
+n.control.responded = 4
+
+dt.pilot = data.table(
+    treat = c(rep(1, n.treat), rep(0, n.control)),
+    responded = c(rep(1, n.treat.responded),                # treat responses
+                  rep(0, n.treat - n.treat.responded),      # treat non-responses
+                  rep(1, n.control.responded),              # control responses
+                  rep(0, n.control - n.control.responded))  # control non-responses
+)
+
+dt.pilot.summary = dt.pilot[, 
+                            .(.N, 
+                              Responses = sum(responded), 
+                              Rate = sum(responded) / .N), 
+                            by=treat]
+```
+
+```{r, results='asis'}
+# Printing pilot summary data
+kable(dt.pilot.summary, digits=3, caption = "Pilot Survey Results", format="pandoc")
+```
+
+```{r, results='asis'}
+# Pilot data analysis using regression
+lm.pilot = lm(responded ~ treat, data=dt.pilot)
+stargazer(lm.pilot, type='latex', title="Regression: Pilot Survey")
+```
+
+```{r}
+# Pilot data analysis using randomization inference
+ri.test(dt.pilot$treat, dt.pilot$responded)
+```
+
+
+
+--------------------------------
+Group         N  Responses  Rate
+----------- --- ---------- ----- 
+Treatment:  134          6  4.5%
+
+Control:    133          4  3.0%
+
+Total:      267         10  3.7%
+--------------------------------
+
+
+## 4.2 Experiment 1: ATG All-Hands Meeting
+
+```{r}
+#csv = getURL('https://raw.githubusercontent.com/winlingit/w241-project-csw/master/rcode/atg_results.csv')
+#dt = data.table(read.csv(textConnection(csv)))
+dt.atg.sum=fread('~/Documents/Berkeley/241/Final\ Project/w241-project-csw/rcode/atg_results.csv')
+dt.atg.sum[Female == 0, Gender := 'M']
+dt.atg.sum[Female == 1, Gender := 'F']
+dt.atg.sum[, Y := Responses / N]
+```
+
+```{r, results='asis'}
+# Covariate/block table
+atg.stats = dt.atg.sum[order(Org, Region, Gender, treat), .(Org, Region, Gender, Treat=treat, N)]
+kable(atg.stats, digits=2, caption = "ATG Survey Blocks", format = 'pandoc')
+```
+
+```{r}
+# Results summary
+atg.results = dcast(dt.atg.sum, 
+                    blocknum + Org + Region + Gender ~ treat, 
+                    value.var= c('N', 'Responses', 'Y'))
+
+atg.results = atg.results[, 
+                          .(Org, Region, Gender, 
+                            'N' = N_0 + N_1, '# Treat' = N_0, '# Control' = N_1, 
+                            'Y(0)' = Y_0, 'Y(1)' = Y_1, ATE = Y_1 - Y_0)]
+
+kable(atg.results, digits=2, caption = "ATG Survey Results", format="pandoc")
+```
+
+```{r}
+# Data reshaped to one row per partcipant.
+dt.atg = dt.atg.sum[rep(seq(.N), N), 
+                    .(CollectorId, blocknum, Org, Region, Female, Treat = treat, Responses), 
+                    with = T]  # expand table to 352 rows
+
+dt.atg[ , 
+        Responded := c(rep(1, max(Responses)), 
+                       rep(0, .N - max(Responses))), 
+        by = CollectorId]  # add var for responded
+dt.atg.sum$Responses == dt.atg[ , sum(Responded), by = CollectorId]$V1  # checksums for total responses for each collector
+```
+
+```{r}
+# Analysis using regression
+lm.atg = lm(Responded ~ Treat, data=dt.atg)
+stargazer(lm.atg, type='text', title="Regression: ATG Survey")
+```
+
+```{r}
+# Analysis using randomizatino inference (not taking blocks into account)
+ri.test(dt.atg$Treat, dt.atg$Responded)
+```
+
+```{r}
+# Analysis using randomizatino inference (with blocks)
+ri.test(dt.atg$Treat, dt.atg$Responded, block=dt.atg$blocknum)
+```
+
+\pagebreak
+
+## 4.3 Experiment 2: PTG All-Hands Meeting
+
+
+```{r}
+dt.ptg=fread('~/Documents/Berkeley/241/Final\ Project/w241-project-csw/rcode/ptg_assignment.csv')
+dt.ptg[Female == 0, Gender := 'M']
+dt.ptg[Female == 1, Gender := 'F']
+dt.ptg = dt.ptg[order(Org, Region, Gender, Treat), .(Org, Region, Gender, Treat, N)]
+```
+
+```{r}
+kable(dt.ptg, digits=2, caption="PTG Survey Blocks", format="pandoc")
+```
+
+
+## 4.3. Meta-Analysis of Both Experiments
+
+
+
+## 4.4. Applications and Future Research
+
+
+
+# 6. Conclusion
+
+
+
+# 7. Acknowledgements
+
+
+
+# Appendices
+
+## A. Examples of Emails for Treatment and Control Groups
+
+
+## C. R Code for Experiment
+
+### Sample Data
+
+
+
+### Anonymization
+
+```{r}
+
+```
+
+### Block Randomization
+
+```{r}
+
+```
+
+
+### Analysis
+
+```{r}
+
+```

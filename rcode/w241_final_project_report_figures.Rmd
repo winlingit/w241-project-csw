@@ -1,3 +1,13 @@
+---
+title: "w241_final_project_report_figures"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, results='asis'}
 
 library(data.table)
 library(ggplot2)
@@ -71,17 +81,8 @@ m3.atg = lm(responded ~ treat + Female + Org, data = dt.atgx) # treatment + fema
 m4.atg = lm(responded ~ treat + Female + Org + Region, data = dt.atgx) # treatment + female + org + region
 
 # show all regression models
-stargazer(m1.atg, m2.atg, m3.atg, m4.atg, type = 'text', title = 'Regression Analysis for ATG Feedback Survey Experiment')
+stargazer(m1.atg, m2.atg, m3.atg, m4.atg, type = 'latex', title = 'Regression Analysis for ATG Feedback Survey Experiment')
 
-# # regression models without Americas
-# dt.atgx.mini <- dt.atgx[Region != 'AMS', ]
-# m5.atg = lm(responded ~ treat, data = dt.atgx.mini) # treatment only
-# m6.atg = lm(responded ~ treat + Female, data = dt.atgx.mini) # treatment + female
-# m7.atg = lm(responded ~ treat + Female + Org, data = dt.atgx.mini) # treatment + female + org
-# m8.atg = lm(responded ~ treat + Female + Org + Region, data = dt.atgx.mini) # treatment + female + org + region
-# 
-# # show all models without Americas
-# stargazer(m5.atg, m6.atg, m7.atg, m8.atg, type = 'text', title = 'Regression Analysis for ATG Feedback Survey Experiment excluding Americas')
 
 ############################
 ###### PTG EXPERIMENT ######
@@ -148,86 +149,7 @@ m3.ptg = lm(responded ~ treat + Female + Org, data = dt.ptgx) # treatment + fema
 m4.ptg = lm(responded ~ treat + Female + Org + Region, data = dt.ptgx) # treatment + female + org + region
 
 # show all models
-stargazer(m1.ptg, m2.ptg, m3.ptg, m4.ptg, type = 'text', title = 'Regression Analysis for PTG Feedback Survey Experiment')
+stargazer(m1.ptg, m2.ptg, m3.ptg, m4.ptg, type = 'latex', title = 'Regression Analysis for PTG Feedback Survey Experiment')
 
-# # regression models without Americas
-# dt.ptgx.mini <- dt.ptgx[Region != 'AMS', ]
-# m5.ptg = lm(responded ~ treat, data = dt.ptgx.mini) # treatment only
-# m6.ptg = lm(responded ~ treat + Female, data = dt.ptgx.mini) # treatment + female
-# m7.ptg = lm(responded ~ treat + Female + Org, data = dt.ptgx.mini) # treatment + female + org
-# m8.ptg = lm(responded ~ treat + Female + Org + Region, data = dt.ptgx.mini) # treatment + female + org + region
-# 
-# # show all models without Americas
-# stargazer(m5.ptg, m6.ptg, m7.ptg, m8.ptg, type = 'text', title = 'Regression Analysis for PTG Feedback Survey Experiment excluding Americas')
-
-
-
-####################
-###### EXTRAS ######
-####################
-
-###### ATG EXPERIMENT: RANDOMIZATION INFERENCE #######
-
-# Note: moved from main analysis
-
-
-
-### 1. Analysis with "ri" package
-
-## NOTE: This code is largely copy/pasted and hacked from the example code for the dt package
-y = dt.atgx$responded
-Z = dt.atgx$treat
-block = dt.atgx$blocknum
-
-# Estimate ATE without blocking
-perms.noblock <- genperms(Z, maxiter=100000) # Generate 100k additional assignments 
-probs.noblock <- genprobexact(Z) # probability of treatment
-ate.noblock <- estate(y, Z, prob=probs.noblock) # estimate the ATE
-ate.noblock
-
-Ys <- genouts(y, Z ,ate=0) # generate potential outcomes under sharp null of no effect
-distout.noblock <- gendist(Ys, perms.noblock, prob=probs.noblock) # generate sampling dist. under sharp null
-dispdist(distout.noblock, ate.noblock)  # display characteristics of sampling dist. for inference
-
-Ys <- genouts(y,Z,ate=ate.noblock) ## generate potential outcomes under tau = ATE
-distout.noblock <- gendist(Ys,perms.noblock, prob=probs.noblock) # generate sampling dist. under tau = ATE
-dispdist(distout.noblock, ate.noblock)  ## display characteristics of sampling dist. for inference
-
-# Estimate ATE with blocking
-perms <- genperms(Z, blockvar=block, maxiter=100000) # Generate 100k additional assignments
-probs <- genprobexact(Z, blockvar=block) # probability of treatment
-ate <- estate(y, Z, prob=probs) # estimate the ATE
-ate
-
-# Conduct Sharp Null Hypothesis Test of Zero Effect for Each Unit
-
-Ys <- genouts(y, Z, ate=0) # generate potential outcomes under sharp null of no effect
-distout <- gendist(Ys, perms, prob=probs) # generate sampling dist. under sharp null
-dispdist(distout, ate)  # display characteristics of sampling dist. for inference
-
-# Generate Sampling Distribution Around Estimated ATE
-
-### 2. Analysis with manual RI
-
-# from randomization.R
-assign.treatment <- function(n) {
-        n.treat = round(n / 2)  # Uses banker's rounding
-        n.control = n - n.treat
-        data = sample(c(rep(1, n.treat), rep(0, n.control)))
-        data
-}
-
-# generate sampling distribution for ATE
-sim.ate = function(dt) {
-        dt[ , treat.ri := assign.treatment(.N), by = block] # randomize assignments in each block
-        ate = dt[ , .(y = sum(responded)/.N), by = treat.ri][ , y[1]-y[2]] # estimate ATE for each assignment
-        ate
-}
-
-ate.dist = replicate(10000, sim.ate(dt.atgx)) # generate sampling distribution for ATE
-plot(density(ate.dist), main = "Distribution of ATE", col = "black", xlab = NA)
-abline(v = ate, col = 'red')
-
-p.value = mean(ate.dist >= ate) # return 1-tailed p-value for estimated ATE
-p.value # p-value < 0.01
-
+stargazer(m1.atg, m1.ptg, type = 'latex', title = 'Regression Analysis for ATG and PTG Feedback Survey Experiments', column.labels = c('ATG','PTG'))
+```
